@@ -27,7 +27,7 @@ class Brain:
         for j in range(netXY[0]):    # Excitatory and Inhibitory Layer (L1)
             for i in range(netXY[1]):
                 address = '01,{0:02d},{1:02d}'.format(j,i)
-                netDendrites = {'00,{0:02d},{1:02d}'.format(j,i): np.random.uniform(0.3, 0.7) for j in range(inXY[0]) for i in range(inXY[1])}
+                netDendrites = {'00,{0:02d},{1:02d}'.format(j,i): np.random.uniform()/392 for j in range(inXY[0]) for i in range(inXY[1])}
                 netAxonTerm = list(inAxonTerminals)
                 netAxonTerm.remove(address)
                 self.network[address] = Neuron(address, netDendrites, netAxonTerm)
@@ -40,39 +40,47 @@ class Brain:
         stats = {str(k): {'01,{0:02d},{1:02d}'.format(j, i): 0 for j in range(self.netXY[0]) for i in range(self.netXY[1])} for k in range(10)}
         order = list(range(len(spikeTrains)))
         np.random.shuffle(order)
-        for w, index in enumerate(order):
-            image = spikeTrains[index]
+        # For each sample...
+        for index, w in enumerate(order):
+            # For each time step...
             for x in range(100):
                 zrange = list(range(self.inXY[0]))
                 np.random.shuffle(zrange)
+                # For each input neuron row...
                 for z in zrange:
                     yrange = list(range(self.inXY[1]))
                     np.random.shuffle(yrange)
+                    # For each input neuron column...
                     for y in yrange:
-                        # print (image[z][y][x])
-                        if (image[z][y][x] == 1):
+                        # If the neuron has spiked...
+                        if (spikeTrains[w][z][y][x] == 1):
                             spikeAddr = '00,{0:02d},{1:02d}'.format(z, y)
                             np.random.shuffle(self.input[spikeAddr].axonTerminals)
+                            # For each excitatory neuron's axon terminals... 
                             for exciteAddr in self.input[spikeAddr].axonTerminals:
                                 self.network[exciteAddr].inputSpike(spikeAddr)
+                                # If the network layer neuron spikes...
                                 if (self.network[exciteAddr].outputSpike()):
-                                    stats[str(labels[index])][exciteAddr] += 1
+                                    stats[str(labels[w])][exciteAddr] += 1
                                     np.random.shuffle(self.network[exciteAddr].axonTerminals)
+                                    # Inhibit all lateral neurons in the network layer.
                                     for inhibitAddr in self.network[exciteAddr].axonTerminals:
                                         self.network[inhibitAddr].inputSpike(exciteAddr)
                 jrange = list(range(self.inXY[0]))
                 np.random.shuffle(jrange)
+                # For each network neuron row...
                 for j in range(self.netXY[0]):
                     irange = list(range(self.inXY[0]))
                     np.random.shuffle(irange)
+                    # For each network neuron column...
                     for i in range(self.netXY[1]):
                         netAddr = '01,{0:02d},{1:02d}'.format(j, i)
                         self.network[netAddr].timeStep()
-            print('Image: {}: {}'.format(w, labels[index]))
+            print('Image: {}: {}'.format(index, labels[w]))
             for addr, neuron in self.network.items():
             	neuron.spikeCount = 0
             #    print('{}: {}'.format(addr, neuron.dwSum))
-            for k, v in stats[str(labels[index])].items():
+            for k, v in stats[str(labels[w])].items():
                 print('{} : {}'.format(k, v))
             # Imaging
             for address, neuron in self.network.items():
@@ -80,10 +88,10 @@ class Brain:
                 scan = np.array(sorted(neuron.dendrites.items(), key=lambda item: item[0]))[:,1].astype(np.float).reshape(28,28)
                 axs[y1, x1].cla()
                 axs[y1, x1].imshow(scan, cmap=cm.get_cmap('YlGn'),
-                    aspect="auto", vmin=0,vmax=1)
+                    aspect="auto", vmin=-0.005,vmax=0.01)
                 axs[y1, x1].set_title('{}'.format(address))
                 axs[y1, x1].relim()
-            fig.suptitle('Image {}: {}'.format(w, labels[index]))
+            fig.suptitle('Image {}: {}'.format(index, labels[w]))
             plt.pause(0.05)
 
 def normalize(X):
@@ -102,7 +110,7 @@ def main():
 
     print('Setting up the brain...')
     brain = Brain()
-    brain.imageTopology([28, 28], [10, 30])
+    brain.imageTopology([28, 28], [10, 10])
 
     # print(len(brain.network['01,00,00'].dendrites))
     print('Simulating...')

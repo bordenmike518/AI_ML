@@ -57,10 +57,10 @@ def uniformSpikeTrain(prob, totaltime):
 def getMNISTspikes(fileName):
     fdata = open(fileName, "r")
     images = fdata.readlines()
-    labels = list()
     fdata.close()
+    labels = list()
     spikeTrains = list()
-    data = dict()
+    # data = dict()
     for image in images[:100]:
         pixels = list(map(int, image.split(',')))
         labels.append(int(pixels[0]))
