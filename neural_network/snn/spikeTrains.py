@@ -54,14 +54,14 @@ def uniformSpikeTrain(prob, totaltime):
             dt = 1
     return isi, spiketrain
 
-def getMNISTspikes(fileName):
+def getMNISTspikes(fileName, bins):
     fdata = open(fileName, "r")
     images = fdata.readlines()
     fdata.close()
     labels = list()
     spikeTrains = list()
-    # data = dict()
-    for image in images[:100]:
+    np.random.shuffle(images)
+    for image in images[:50]:
         pixels = list(map(int, image.split(',')))
         labels.append(int(pixels[0]))
         pixels.pop(0)
@@ -71,7 +71,7 @@ def getMNISTspikes(fileName):
             for x in range(28):
                 pixelProb = pixels[(y*28)+x]/255
                 prob = 0.1 if (pixelProb < np.random.randint(1,6)/100) else pixelProb
-                _, spiketrain = poissonSpikeTrain(int(prob*100), 100)
+                _, spiketrain = poissonSpikeTrain(int(prob*100), bins)
                 rowSpikeTrains.append(spiketrain)
             imageSpikeTrains.append(rowSpikeTrains)
         spikeTrains.append(imageSpikeTrains)

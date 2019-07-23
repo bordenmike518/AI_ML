@@ -2,8 +2,8 @@ import numpy as np
 
 class Neuron:
     def __init__(self, address, dendrites=dict(), axonTerminals=list(), 
-                 histLen=60, resting=0, threshold=5, refactorPeriod=10, 
-                 leak=0.0395, inhibit=5):
+                 histLen=60, resting=0, threshold=300, refactorPeriod=10, 
+                 leak=2, inhibit=300):
         self.address        = address
         self.dendrites      = dendrites
         self.axonTerminals  = axonTerminals
@@ -24,13 +24,13 @@ class Neuron:
     def STDP(self, address, lr, A, dt, ms):
         if (True): #(dt <= -2 or dt >= 2)):
             if (dt > 0):
-                s, impact = -1, self.dendrites[address]-0.005
+                s, impact = -1, self.dendrites[address] 
             else:
                 s, impact =  1, 1 - self.dendrites[address]
             dw = lr * (s*A) * np.e ** (dt / (s*ms)) * impact
             # dw = lr * s*dt * impact
             self.dendrites[address] += dw
-            #self.dwSum += dw if (dw > 0) else 0 #-dw
+            self.dwSum += dw if (dw > 0) else -dw
 
 
     def inputSpike(self, address):
@@ -49,20 +49,15 @@ class Neuron:
                 # ... and stdpCount.
                 if (self.stdpCount > 0):
                     dt = self.histLen - self.stdpCount
-                    self.STDP(address, 0.001, 0.6, dt, self.histLen) # Postsynaptic Potential
+                    self.STDP(address, 0.001, 0.1, dt, self.histLen/2) # Postsynaptic Potential
 
     def outputSpike(self):
-        if (self.potential >= self.depressvalue):
-            if (self.depressvalue > self.threshold*10):
-                self.threshold *= 1.20
-                self.depressstep = self.threshold / 100
-            else:
-                self.depressvalue = self.threshold*10
+        if (self.potential >= self.threshold):
             for address, dt in self.history:
-                self.STDP(address, 0.001, 0.3, dt, self.histLen)      # Presynaptic Potential
+                self.STDP(address, 0.01, 0.3, dt, self.histLen)      # Presynaptic Potential
             acc = sum(self.dendrites.values())
             for k, dv in self.dendrites.items():
-                self.dendrites[k] = (dv / (acc))
+                self.dendrites[k] = (392 - self.dwSum) * (dv / (acc))
             self.potential = self.resting
             self.stdpCount = self.histLen
             self.history = list()
@@ -78,8 +73,8 @@ class Neuron:
                 self.stdpCount -= 1
             for i, _ in enumerate(self.history):
                 self.history[i][1] -= 1
-            if (self.depressvalue >= self.threshold*10):
-                self.depressvalue -= self.depressstep
+            # if (self.depressvalue >= self.threshold*10):
+            #     self.depressvalue -= self.depressstep
         #     self.threshold -= 0.1
         # else:
         #     self.threshold *= 1.2
