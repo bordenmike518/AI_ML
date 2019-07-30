@@ -39,11 +39,11 @@ def poissonSpikeTrain(spikes, totaltime):
     return isi[:i], spiketrain
 
 def uniformSpikeTrain(prob, totaltime):
-    spiketrain = np.random.rand(int(totaltime/2))
+    spiketrain = np.random.rand(int(totaltime))
     spiketrain = [1 if(spike < prob) else 0 for spike in spiketrain]
-    spiketrain2 = np.random.rand(int(totaltime/2))
-    spiketrain2 = [1 if(spike < 0.05) else 0 for spike in spiketrain]
-    spiketrain.extend(spiketrain2)
+    # spiketrain2 = np.random.rand(int(totaltime/2))
+    # spiketrain2 = [1 if(spike < 0.05) else 0 for spike in spiketrain]
+    # spiketrain.extend(spiketrain2)
     isi, dt, runtotal = list(), 1, 0
     for spike in spiketrain:
         if (spike == 0):
@@ -54,14 +54,14 @@ def uniformSpikeTrain(prob, totaltime):
             dt = 1
     return isi, spiketrain
 
-def getMNISTspikes(fileName, bins):
+def getMNISTspikes(fileName, bins, trainType='poisson'):
     fdata = open(fileName, "r")
     images = fdata.readlines()
     fdata.close()
     labels = list()
     spikeTrains = list()
     np.random.shuffle(images)
-    for image in images[:50]:
+    for image in images[1000:3500]:
         pixels = list(map(int, image.split(',')))
         labels.append(int(pixels[0]))
         pixels.pop(0)
@@ -70,8 +70,11 @@ def getMNISTspikes(fileName, bins):
             rowSpikeTrains = list()
             for x in range(28):
                 pixelProb = pixels[(y*28)+x]/255
-                prob = 0.1 if (pixelProb < np.random.randint(1,6)/100) else pixelProb
-                _, spiketrain = poissonSpikeTrain(int(prob*100), bins)
+                prob = np.random.randint(1,6)/100 if (pixelProb < 0.05) else pixelProb
+                if (trainType == 'uniform'):
+                    _, spiketrain = uniformSpikeTrain(prob/5, bins)
+                else:
+                    _, spiketrain = poissonSpikeTrain(int(prob*(bins/10)), bins)
                 rowSpikeTrains.append(spiketrain)
             imageSpikeTrains.append(rowSpikeTrains)
         spikeTrains.append(imageSpikeTrains)
