@@ -213,7 +213,8 @@ def  standardize(X):
 
 def main():
 
-    directory = "/home/michael/Documents/workspace/python/artificial_intelligence/datasets/MNIST/"
+    # Add your directory path to the MNIST data in CSV format.
+    directory = "your/mnist/data/"
     bins = 1000
 
     print('Loading data...')
