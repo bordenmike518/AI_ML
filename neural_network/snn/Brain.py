@@ -18,6 +18,7 @@ class Brain:
                 print('Reloading brain...')
                 f = open(self.name+'/'+self.name+'.pickle', 'rb')
                 pickleDict    = pickle.load(f)
+                f.close()
                 self.input    = pickleDict['input']
                 self.network  = pickleDict['network']
                 self.stats    = pickleDict['stats']
